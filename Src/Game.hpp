@@ -81,24 +81,34 @@ public:
     }
     void driveMainMenu(Controller controller) {
         static int hover_idx = 0;
-        if (
-            controller.getDirection() == HatDir::DOWN || 
-            controller.getDirection() == HatDir::DOWNLEFT || 
-            controller.getDirection() == HatDir::DOWNRIGHT
-            ) 
-            hover_idx++;
-        if (
-            controller.getDirection() == HatDir::UP ||
-            controller.getDirection() == HatDir::UPLEFT ||
-            controller.getDirection() == HatDir::UPRIGHT
-            ) 
-            hover_idx--; 
+        static bool selected = false;
 
-        if (hover_idx == -1) hover_idx = 3;
-        if (hover_idx == 4) hover_idx = 0;
-        for (int i=0; i<4; i++) {
-            if (i == hover_idx) this->main_menu.set_button_state(i, ButtonState::HOVERED);
-            else this->main_menu.set_button_state(i, ButtonState::DEFAULT);
+        if (!selected) {
+            if (
+                controller.getDirection() == HatDir::DOWN || 
+                controller.getDirection() == HatDir::DOWNLEFT || 
+                controller.getDirection() == HatDir::DOWNRIGHT
+                ) 
+                hover_idx++;
+            if (
+                controller.getDirection() == HatDir::UP ||
+                controller.getDirection() == HatDir::UPLEFT ||
+                controller.getDirection() == HatDir::UPRIGHT
+                ) 
+                hover_idx--; 
+
+            if (hover_idx == -1) hover_idx = 3;
+            if (hover_idx == 4) hover_idx = 0;
+            for (int i=0; i<4; i++) {
+                if (i == hover_idx) {
+                    this->main_menu.set_button_state(i, ButtonState::HOVERED);
+                    if (controller.getStartButtonState() == true) {
+                        this->main_menu.set_button_state(i, ButtonState::SELECTED);
+                        selected = true;
+                    }
+                }
+                else this->main_menu.set_button_state(i, ButtonState::DEFAULT);
+            }
         }
     }
 

@@ -13,15 +13,54 @@
 
 #define GROUND 150
 
+//States for Fighter Class
 enum FighterState {
+    //Movement States
     IDLE,
     WALK,
     WALKBACK,
     CROUCH,
     DASH,
-    DASHBACK
+    DASHBACK,
+    JUMP,
+    JUMPDASH,
+    JUMPDASHBACK,
+
+    //Attack States (Unimplemented)
+    SLPUNCH,
+    SLKICK,
+    SHPUNCH,
+    SHKICK,
+    CLPUNCH,
+    CLKICK,
+    CHPUNCH,
+    CHKICK,
+    FTHROW,
+    BTHROW,
+    SPEC1,
+    SPEC2,
+    SPEC3,
+    SPEC4,
+    SPEC5,
+    SPEC6,
+    SPEC7,
+    SPEC8,
+    SPEC9,
+    SPEC10,
+    SUPER1,
+    SUPER2,
+    SUPER3,
+
+    //Getting the Shit Kicked Out of Them States (Unimplemented)
+    BLOCKSTUN,
+    HITSTUN,
+    GRABBED,
+    HARDKNOCKDOWN
+    //There will probably be more states. Depends on the combo system we decide on
+
 };
 
+//TODO: Actually implement these collision states
 enum Collision {
     NONE,
     ONE_HIT_TWO,
