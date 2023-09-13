@@ -71,6 +71,12 @@ public:
         
         return this->state;
     }
+    uint8_t getButtonDeltas(int idx = -1) {
+        if (idx >= 0) {
+            return this->buffer[this->buffer.size() - 1 - idx].state ^ this->buffer[this->buffer.size() - 2 - idx].state;
+        }
+        return this->state ^ this->buffer[this->buffer.size() - 1].state;
+    }
     bool getStartButtonState() {
         return this->start_btn;
     }

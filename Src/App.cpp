@@ -8,6 +8,7 @@
 #include "Fighter.hpp"
 #include "Scene.hpp"
 #include "Game.hpp"
+#include "Background.hpp"
 
 #define RENDERSCALE 4
 
@@ -48,11 +49,11 @@ int main(int argv, char** args) {
 
     /*************************************/
 
-    Game game;
-    game.loadStartMenu(main_renderer);
+    //Game game;
+    //game.loadStartMenu(main_renderer);
 
-    //Fighter test("Rich Brian", main_renderer);
-    //test.set_flip(true, false);
+    Fighter test("Rich Brian", main_renderer);
+    test.set_flip(true, false);
 
     /************** App Loop **************/
     bool ctr_read = false;
@@ -169,12 +170,12 @@ int main(int argv, char** args) {
         std::chrono::duration<double> elapsed_seconds = end-start;
         if (elapsed_seconds.count() > 0.016666) {
             if (ctr_read) {
-                game.drive(controllers[0]);
+                test.drive(controllers[0]);
                 ctr_read = false;
             }
-            game.update();
+            test.update();
 
-            game.render_to(main_renderer);
+            test.render_to(main_renderer);
             SDL_RenderPresent(main_renderer);
             SDL_RenderClear(main_renderer);
             start = chrono::system_clock::now();

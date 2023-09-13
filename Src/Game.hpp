@@ -74,6 +74,9 @@ public:
         options.set_position((SCREENWIDTH - w) / 2, 130);
         this->main_menu.addButton(options);
     }
+    void loadCharacterSelect(SDL_Renderer* renderer) {
+        
+    }
     void driveStartMenu(Controller controller) {
         if (controller.getStartButtonState()) {
             this->start_menu.set_button_state(0, ButtonState::SELECTED);
@@ -123,7 +126,7 @@ public:
         if (frame_ct == 100) {
             this->start_menu.set_active_state(-1, true);
         }
-        if (start_menu.get_button_state(0)) {
+        if (start_menu.get_button_state(0) == ButtonState::SELECTED) {
             exit_frame_ct++;
             this->next_state = GameState::MAINMENU;
         }
@@ -142,6 +145,14 @@ public:
             if (frame_ct == 10 * i) {
                 this->main_menu.set_active_state(-i, true);
             }
+        }
+        if (main_menu.get_button_state(1) == ButtonState::SELECTED) {
+            exit_frame_ct++;
+            this->next_state = GameState::CHARACTERSELECT;
+        }
+        if (exit_frame_ct == 20) {
+            fade_frame_ct = 0;
+            fade = true;
         }
     }
 
