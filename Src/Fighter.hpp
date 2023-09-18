@@ -19,7 +19,9 @@ enum FighterState {
     IDLE,
     WALK,
     WALKBACK,
+    PRECROUCH,
     CROUCH,
+    POSTCROUCH,
     DASH,
     DASHBACK,
     JUMPSQUAT,
@@ -57,9 +59,10 @@ enum FighterState {
     BLOCKSTUN,
     HITSTUN,
     GRABBED,
-    HARDKNOCKDOWN
+    HARDKNOCKDOWN,
     //There will probably be more states. Depends on the combo system we decide on
 
+    SIZE //Number of states that exist
 };
 
 //TODO: Actually implement these collision states
@@ -103,14 +106,7 @@ private:
     bool is_blocking;
 
     //animation data
-    Animation idle_anim;
-    Animation walk_anim;
-    Animation crouch_anim;
-    Animation dash_anim;
-    Animation dashback_anim;
-    Animation jumpsquat_anim;
-    Animation jumpup_anim;
-    Animation jumpdown_anim;
+    Animation anims[FighterState::SIZE];
 
     //collision tracking
     SDL_Point ecb_standing; //Environmental Collision Box
@@ -140,8 +136,16 @@ public:
         while (!anim_guide.eof()) {
             std::string state_str;
             int frame_ct;
-            int frame_wait;
-            anim_guide >> state_str >> frame_ct >> frame_wait;
+            std::vector<int> frame_wait;
+            anim_guide >> state_str >> frame_ct;
+            while (frame_wait.size() < frame_ct) {
+                int frame_ct2;
+                int frame_wait2;
+                anim_guide >> frame_ct2 >> frame_wait2;
+                for (int i=0; i<frame_ct2; i++) {
+                    frame_wait.push_back(frame_wait2);
+                }
+            }
             FighterState state_to_animate;
             if (state_str.compare("Idle") == 0) {
                 state_to_animate = FighterState::IDLE;
@@ -149,8 +153,14 @@ public:
             else if (state_str.compare("Walk") == 0) {
                 state_to_animate = FighterState::WALK;
             }
+            else if (state_str.compare("PreCrouch") == 0) {
+                state_to_animate = FighterState::PRECROUCH;
+            }
             else if (state_str.compare("Crouch") == 0) {
                 state_to_animate = FighterState::CROUCH;
+            }
+            else if (state_str.compare("PostCrouch") == 0) {
+                state_to_animate = FighterState::POSTCROUCH;
             }
             else if (state_str.compare("Dash") == 0) {
                 state_to_animate = FighterState::DASH;
@@ -176,34 +186,7 @@ public:
             );
             
                 
-            switch (state_to_animate) {
-            default:
-                break;
-            case FighterState::IDLE:
-                this->idle_anim = Animation(frame_ct, frame_wait, filename, renderer);
-                break;
-            case FighterState::WALK:
-                this->walk_anim = Animation(frame_ct, frame_wait, filename, renderer);
-                break;
-            case FighterState::CROUCH:
-                this->crouch_anim = Animation(frame_ct, frame_wait, filename, renderer);
-                break;
-            case FighterState::DASH:
-                this->dash_anim = Animation(frame_ct, frame_wait, filename, renderer);
-                break;
-            case FighterState::DASHBACK:
-                this->dashback_anim = Animation(frame_ct, frame_wait, filename, renderer);
-                break;
-            case FighterState::JUMPSQUAT:
-                this->jumpsquat_anim = Animation(frame_ct, frame_wait, filename, renderer);
-                break;
-            case FighterState::JUMPUP:
-                this->jumpup_anim = Animation(frame_ct, frame_wait, filename, renderer);
-                break;
-            case FighterState::JUMPDOWN:
-                this->jumpdown_anim = Animation(frame_ct, frame_wait, filename, renderer);
-                break;
-            }
+            this->anims[state_to_animate] = Animation(frame_ct, frame_wait, filename, renderer);
         }
 
         
@@ -233,7 +216,7 @@ public:
             }
         }
         
-        this->texture = idle_anim.current_frame();
+        this->texture = this->anims[this->state].current_frame();
         Uint32 format;
         int access;
         int w;
@@ -242,8 +225,8 @@ public:
             cout << SDL_GetError() << endl;
         }
         
-        this->p_x = 0;
-        this->p_y = GROUND - h;
+        this->p_x = 100;
+        this->p_y = GROUND;
 
         cout <<"Character Loaded:" << endl;
         cout <<"\tName: " << this->name << endl;
@@ -275,6 +258,21 @@ public:
         return Collision::NONE;
     }
 
+    bool is_crouching() {
+        return (
+            this->state == FighterState::PRECROUCH ||
+            this->state == FighterState::CROUCH
+        );
+    }
+
+    bool is_jumping() {
+        return (
+            this->state == FighterState::JUMPSQUAT ||
+            this->state == FighterState::JUMPUP ||
+            this->state == FighterState::JUMPDOWN
+        );
+    }
+
     void drive(Controller controller) {
         switch ((controller.getButtonState() | controller.getButtonDeltas()) & 0b00001111) {
         case 0b00000110:
@@ -282,18 +280,18 @@ public:
             case FighterState::IDLE:
             case FighterState::WALK:
             case FighterState::WALKBACK:
+            case FighterState::POSTCROUCH:
                 for (int i=0; i<controller.getBufferSize(); i++) {
                     if ((controller.getButtonState(i) & 0b00000110) == 0 && dash_lockout == 0) {
                         this->state = (
-                            (controller.getDirection() == HatDir::LEFT)? 
+                            (controller.getDirection() == HatDir::LEFT || controller.getDirection() == HatDir::DOWNLEFT)? 
                             FighterState::DASHBACK : 
                             FighterState::DASH);
-                        this->dash_anim.reset();
-                        this->dashback_anim.reset();
                         this->v_x = (
-                            (controller.getDirection() == HatDir::LEFT)? 
+                            (this->state == FighterState::DASHBACK)? 
                             -dash_speed :
                             dash_speed);
+                        this->anims[this->state].reset();
                         return;
                     }
                 }
@@ -306,12 +304,13 @@ public:
         case HatDir::NEUTRAL:
             if (
                 this->state == FighterState::WALK ||
-                this->state == FighterState::WALKBACK ||
-                this->state == FighterState::CROUCH
+                this->state == FighterState::WALKBACK
                 ) {
                 this->set_state(FighterState::IDLE);
-                this->idle_anim.reset();
                 this->v_x = 0;
+            }
+            else if (this->is_crouching()) {
+                this->state = FighterState::POSTCROUCH;
             }
             this->next_state = FighterState::IDLE;
             this->next_vx = 0;
@@ -334,12 +333,10 @@ public:
                 }
                 if (dash_flag == 3 && dash_lockout == 0) {
                     this->set_state(FighterState::DASH);
-                    this->dash_anim.reset();
                     this->v_x = dash_speed;
                 }
                 else {
                     this->set_state(FighterState::WALK);
-                    this->walk_anim.reset();
                     this->v_x = walk_speed;
                 }
             }
@@ -364,12 +361,10 @@ public:
                 }
                 if (dash_flag == 3 && dash_lockout == 0) {
                     this->set_state(FighterState::DASHBACK);
-                    this->dashback_anim.reset();
                     this->v_x = -dash_speed;
                 }
                 else {
                     this->set_state(FighterState::WALKBACK);
-                    this->walk_anim.reset();
                     this->v_x = -walk_speed;
                 }
             }
@@ -380,18 +375,15 @@ public:
         case HatDir::DOWNLEFT:
         case HatDir::DOWNRIGHT:
             if (
-                this->state != FighterState::CROUCH &&
-                this->state != FighterState::JUMPSQUAT &&
-                this->state != FighterState::JUMPUP &&
-                this->state != FighterState::JUMPDOWN
+                !(this->is_crouching()) &&
+                !(this->is_jumping())
                 ) {
                 if (
                     this->state == FighterState::WALK ||
                     this->state == FighterState::WALKBACK
                 )
                     this->v_x = 0;
-                this->set_state(FighterState::CROUCH);
-                this->crouch_anim.reset();
+                this->set_state(FighterState::PRECROUCH);
             }
             this->next_state = FighterState::CROUCH;
             this->next_vx = 0;
@@ -404,7 +396,7 @@ public:
             if (controller.getDirection() == UPRIGHT) {
                 this->next_vx = this->jump_speed_x;
                 if (
-                    abs(this->v_x) < this->jump_speed_x &&
+                    //abs(this->v_x) < this->jump_speed_x &&
                     this->state != FighterState::JUMPDOWN &&
                     this->state != FighterState::JUMPUP
                 ) {
@@ -414,7 +406,7 @@ public:
             else if (controller.getDirection() == UPLEFT) {
                 this->next_vx = -this->jump_speed_x;
                 if (
-                    abs(this->v_x) < this->jump_speed_x &&
+                    //abs(this->v_x) < this->jump_speed_x &&
                     this->state != FighterState::JUMPDOWN &&
                     this->state != FighterState::JUMPUP
                 ) {
@@ -430,20 +422,12 @@ public:
                 this->state == FighterState::DASHBACK
             ) {
                 this->set_state(FighterState::JUMPSQUAT);
-                this->jumpsquat_anim.reset();
             }
             break;
         default:
             break;
         }
-        if (
-            (
-                prev_state == FighterState::DASH ||
-                prev_state == FighterState::DASHBACK
-            ) &&
-            this->state != FighterState::CROUCH
-            )
-            dash_lockout = 15;
+        if (this->state != FighterState::DASH && this->state != FighterState::DASHBACK && this->state != prev_state) this->anims[this->state].reset();
     }
 
     //Frame update fn
@@ -460,76 +444,64 @@ public:
         static int h = 0;
 
         if (this->dash_lockout > 0) this-> dash_lockout--;
-
+        
+        if (this->state != FighterState::WALKBACK) {
+            this->texture = this->anims[this->state].current_frame();
+            this->anims[this->state].update();
+        }
         switch (this->state) {
-        case FighterState::IDLE:
-            this->texture = idle_anim.current_frame();
-            idle_anim.update();
-            break;
-        case FighterState::WALK:
-            this->texture = walk_anim.current_frame();
-            walk_anim.update();
-            break;
         case FighterState::WALKBACK:
-            this->texture = walk_anim.current_frame();
-            walk_anim.reverse_update();
+            this->texture = this->anims[FighterState::WALK].current_frame();
+            this->anims[FighterState::WALK].reverse_update();
+            break;
+        case FighterState::PRECROUCH:
+            if (this->anims[this->state].is_finished()) {
+                this->state = FighterState::CROUCH;
+                this->anims[this->state].reset();
+            }
             break;
         case FighterState::CROUCH:
-            this->texture = crouch_anim.current_frame();
-            crouch_anim.update();
-            this->v_x *= 0.9;
-            if (abs(this->v_x) < 0.1) this->v_x = 0;
+            this->v_x *= 0.89;
+            if (abs(this->v_x) < 0.15) this->v_x = 0;
             break;
-        case FighterState::DASH:
-            this->texture = dash_anim.current_frame();
-            dash_anim.update();
-            if (dash_anim.is_finished()) {
+        case FighterState::POSTCROUCH:
+            if (this->anims[this->state].is_finished()) {
                 this->state = FighterState::IDLE;
-                idle_anim.reset();
+                this->anims[this->state].reset();
                 this->v_x = 0;
             }
             break;
+        case FighterState::DASH:
         case FighterState::DASHBACK:
-            this->texture = dashback_anim.current_frame();
-            dashback_anim.update();
-            if (dashback_anim.is_finished()) {
-                this->state = FighterState::IDLE;
-                idle_anim.reset();
-                this->v_x = 0;
+            if (this->anims[this->state].is_finished()) {
+                this->dash_lockout = 20;
+                this->anims[this->state].reset();
+                this->state = this->next_state;
+                this->anims[this->state].reset();
+                this->v_x = next_vx;
             }
             break;
         case FighterState::JUMPSQUAT:
-            this->texture = jumpsquat_anim.current_frame();
-            jumpsquat_anim.update();
-            if (jumpsquat_anim.is_finished()) {
+            if (this->anims[this->state].is_finished()) {
                 this->state = FighterState::JUMPUP;
-                jumpup_anim.reset();
+                this->anims[this->state].reset();
                 this->v_y = -(this->jump_speed_y);
                 this->a_y = this->jump_accel;
             }
             break;
         case FighterState::JUMPUP:
-            this->texture = jumpup_anim.current_frame();
-            jumpup_anim.update();
-            if (SDL_QueryTexture(texture, &format, &access, &w, &h) < 0) {
-                cout << SDL_GetError() << endl;
-            }
             if (this->grounded) {
-                this->p_y = 200 - h;
+                this->p_y = GROUND;
                 grounded = false;
             }
             if (this->v_y >= 0) {
+                this->anims[this->state].reset();
                 this->state = FighterState::JUMPDOWN;
-                jumpdown_anim.reset();
+                this->anims[this->state].reset();
             }
             break;
         case FighterState::JUMPDOWN:
-            this->texture = jumpdown_anim.current_frame();
-            jumpdown_anim.update();
-            if (SDL_QueryTexture(texture, &format, &access, &w, &h) < 0) {
-                cout << SDL_GetError() << endl;
-            }
-            if (this->p_y > 200 - h) {
+            if (this->p_y > GROUND) {
                 this->state = this->next_state;
                 this->v_x = this->next_vx;
                 this->v_y = 0;
@@ -540,15 +512,14 @@ public:
         default:
             break;
         }
-        if (SDL_QueryTexture(texture, &format, &access, &w, &h) < 0) {
-            cout << SDL_GetError() << endl;
-        }
         if (this->grounded) {
-            this->p_y = 200 - h;
+            this->p_y = GROUND;
         }
+
+        SDL_QueryTexture(this->texture, &format, &access, &w, &h);
         
-        this->x = int(this->p_x);
-        this->y = int(this->p_y);
+        this->x = int(this->p_x) - w/2;
+        this->y = int(this->p_y) - h;
     }
 };
 #endif

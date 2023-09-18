@@ -126,12 +126,12 @@ struct Animation {
     int frame_idx;
     int anim_frame_idx;
 
-    int frame_wait;
+    std::vector<int> frame_wait;
     std::vector<SDL_Texture*> frames;
 
     Animation() {}
 
-    Animation(int frame_ct, int frame_wait, std::string frame_dir_name, SDL_Renderer* renderer) {
+    Animation(int frame_ct, std::vector<int> frame_wait, std::string frame_dir_name, SDL_Renderer* renderer) {
         this->frame_wait = frame_wait;
         this->frame_idx = 0;
         this->anim_frame_idx = 0;
@@ -159,7 +159,7 @@ struct Animation {
         this->anim_frame_idx = 0;
     }
     bool is_finished() {
-        return this->anim_frame_idx == this->frames.size() - 1 && this->frame_idx == this->frame_wait - 1;
+        return this->anim_frame_idx == this->frames.size() - 1 && this->frame_idx == this->frame_wait[anim_frame_idx] - 1;
     }
     SDL_Texture* current_frame() {
         return this->frames[anim_frame_idx];
@@ -169,7 +169,7 @@ struct Animation {
     }
     void update() {
         this->frame_idx++;
-        this->frame_idx %= this->frame_wait;
+        this->frame_idx %= this->frame_wait[anim_frame_idx];
         this->anim_frame_idx += (this->frame_idx == 0);
         if (this->anim_frame_idx >= this->frames.size()) {
             this->anim_frame_idx = 0;
@@ -177,7 +177,7 @@ struct Animation {
     }
     void reverse_update() {
         this->frame_idx++;
-        this->frame_idx %= this->frame_wait;
+        this->frame_idx %= this->frame_wait[anim_frame_idx];
         this->anim_frame_idx -= (this->frame_idx == 0);
         if (this->anim_frame_idx < 0) {
             this->anim_frame_idx = this->frames.size() - 1;

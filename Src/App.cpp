@@ -46,6 +46,7 @@ int main(int argv, char** args) {
     auto start = chrono::system_clock::now();
     
     SDL_SetRenderDrawBlendMode(main_renderer, SDL_BlendMode::SDL_BLENDMODE_BLEND);
+    SDL_SetRenderDrawColor(main_renderer, 50, 50, 50, 255);
 
     /*************************************/
 

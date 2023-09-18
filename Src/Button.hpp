@@ -35,8 +35,15 @@ public:
         while (!anim_guide.eof()) {
             std::string state_str;
             int frame_ct;
-            int frame_wait;
-            anim_guide >> state_str >> frame_ct >> frame_wait;
+            std::vector<int> frame_wait;
+            while (frame_wait.size() < frame_ct) {
+                int frame_ct2;
+                int frame_wait2;
+                anim_guide >> frame_ct2 >> frame_wait2;
+                for (int i=0; i<frame_ct2; i++) {
+                    frame_wait.push_back(frame_wait2);
+                }
+            }
             ButtonState state_to_animate;
             if (state_str.compare("None") == 0) {
                 state_to_animate = ButtonState::DEFAULT;

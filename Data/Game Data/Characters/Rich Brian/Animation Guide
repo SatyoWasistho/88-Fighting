@@ -1,8 +1,32 @@
-Idle 10 3
-Walk 12 4
-Crouch 1 1
-Dash 1 15
-DashBack 1 15
-JumpSquat 1 3
-JumpUp 1 1
-JumpDown 1 1
+Idle 16
+7 3
+1 60
+7 3
+1 60
+PreCrouch 3
+3 1
+Crouch 1
+1 1
+PostCrouch 2
+2 2
+Walk 17
+17 3
+Dash 8
+3 2
+1 3
+1 5
+3 1
+DashBack 8
+3 2
+1 3
+1 5
+3 1
+JumpSquat 3
+3 1
+JumpUp 4
+2 3
+1 4
+1 21
+JumpDown 2
+1 3
+1 27
