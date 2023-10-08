@@ -27,6 +27,7 @@ enum FighterState {
     JUMPSQUAT,
     JUMPUP,
     JUMPDOWN,
+    JUMPLAND,
     JUMPDASH,
     JUMPDASHBACK,
 
@@ -177,6 +178,9 @@ public:
             else if (state_str.compare("JumpDown") == 0) {
                 state_to_animate = FighterState::JUMPDOWN;
             }
+            else if (state_str.compare("JumpLand") == 0) {
+                state_to_animate = FighterState::JUMPLAND;
+            }
             else {
                 break;
             }
@@ -185,7 +189,7 @@ public:
                 name + "/" + state_str
             );
             
-                
+            cout << state_str << endl;
             this->anims[state_to_animate] = Animation(frame_ct, frame_wait, filename, renderer);
         }
 
@@ -417,7 +421,8 @@ public:
                 this->state == FighterState::IDLE ||
                 this->state == FighterState::WALK ||
                 this->state == FighterState::WALKBACK ||
-                this->state == FighterState::CROUCH ||
+                this->state == FighterState::POSTCROUCH ||
+                this->is_crouching() ||
                 this->state == FighterState::DASH ||
                 this->state == FighterState::DASHBACK
             ) {
@@ -502,11 +507,17 @@ public:
             break;
         case FighterState::JUMPDOWN:
             if (this->p_y > GROUND) {
-                this->state = this->next_state;
-                this->v_x = this->next_vx;
+                this->state = JUMPLAND;
+                this->v_x = 0;
                 this->v_y = 0;
                 this->a_y = 0;
                 this->grounded = true;
+            }
+            break;
+        case FighterState::JUMPLAND:
+            if (this->anims[this->state].is_finished()) {
+                this->state = this->next_state;
+                this->v_x = this->next_vx;
             }
             break;
         default:

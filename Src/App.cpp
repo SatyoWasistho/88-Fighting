@@ -46,15 +46,16 @@ int main(int argv, char** args) {
     auto start = chrono::system_clock::now();
     
     SDL_SetRenderDrawBlendMode(main_renderer, SDL_BlendMode::SDL_BLENDMODE_BLEND);
-    SDL_SetRenderDrawColor(main_renderer, 50, 50, 50, 255);
+    //SDL_SetRenderDrawColor(main_renderer, 50, 50, 50, 255);
 
     /*************************************/
 
-    //Game game;
-    //game.loadStartMenu(main_renderer);
+    Game game;
+    cout << "Here" << endl;
+    game.loadStartMenu(main_renderer);
 
-    Fighter test("Rich Brian", main_renderer);
-    test.set_flip(true, false);
+    //Fighter test("Rich Brian", main_renderer);
+    //test.set_flip(true, false);
 
     /************** App Loop **************/
     bool ctr_read = false;
@@ -171,12 +172,12 @@ int main(int argv, char** args) {
         std::chrono::duration<double> elapsed_seconds = end-start;
         if (elapsed_seconds.count() > 0.016666) {
             if (ctr_read) {
-                test.drive(controllers[0]);
+                game.drive(controllers[0]);
                 ctr_read = false;
             }
-            test.update();
+            game.update();
 
-            test.render_to(main_renderer);
+            game.render_to(main_renderer);
             SDL_RenderPresent(main_renderer);
             SDL_RenderClear(main_renderer);
             start = chrono::system_clock::now();

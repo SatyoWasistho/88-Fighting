@@ -34,18 +34,25 @@ public:
 
     void loadStartMenu(SDL_Renderer* renderer) {
         UIElem bg("Menus/Title Screen", renderer, false);
+        cout << "Background Loaded" << endl;
         this->start_menu = Scene(bg);
+        cout << "Background Added" << endl;
         UIElem logo("UI/Logo", renderer);
+        cout << "Logo Loaded" << endl;
         int w, h;
         logo.get_dims(&w, &h);
         logo.set_position((SCREENWIDTH - w) / 2, 10);
         this->start_menu.addElement(logo);
-
+        
+        cout << "Logo Added" << endl;
         
         Button start_button("UI/Press Start", renderer, false);
+        cout << "Start Button Loaded" << endl;
         start_button.get_dims(&w, &h);
         start_button.set_position((SCREENWIDTH - w) / 2, SCREENHEIGHT / 2);
         this->start_menu.addButton(start_button);
+        
+        cout << "Start Button Added" << endl;
     }
     void loadMainMenu(SDL_Renderer* renderer) {
         UIElem bg("Menus/Main Menu", renderer);

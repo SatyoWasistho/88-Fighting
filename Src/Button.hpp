@@ -36,6 +36,7 @@ public:
             std::string state_str;
             int frame_ct;
             std::vector<int> frame_wait;
+            anim_guide >> state_str >> frame_ct;
             while (frame_wait.size() < frame_ct) {
                 int frame_ct2;
                 int frame_wait2;
