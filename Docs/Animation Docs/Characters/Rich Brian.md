@@ -27,6 +27,16 @@ For the walk cycle, I wanna mimick the walk from this music video at 0:25.
 
 I really wanna emphasize that back-and-forth sway in the upper body, the head-bob especially (this is where you're gonna get a lot of funny glasses angles). That's like where all the personality in the motion comes from.
 
+## Crouch
+
+![Rich Brian Crouch Pose](https://github.com/SatyoWasistho/88-Fighting/blob/master/Assets/Sprites/Characters/Rich%20Brian/Crouch.png?raw=true)
+
+I actually want two animations for this.
+
+ - **Transition Animation:** Just a 3-frame transition between his idle pose and his crouch pose. In Tekken terms, this is for his *while-standing* and *while-crouching* states. You can either do a unique animation for each, or you can do one animation that will just be played forward for one and backward for the other. The engine I've written supports either.
+
+ - **Crouch Animation:** Same concept as the idle, just applied to this pose.
+
 ## TODO: Other Animations
 
 I'll give you directions and resources for other animations later on. This is my first day off from the bar in a while, so I finally get to actually sit down and work on the game a bunch today.
